@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_states_app/src/bloc/usuario/usuario_bloc.dart';
+import 'package:flutter_states_app/src/models/Usuario.dart';
 
 class Page1Screen extends StatelessWidget {
   @override
@@ -7,6 +10,13 @@ class Page1Screen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('pagina1'),
+        actions: [
+          IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: () {
+                BlocProvider.of<UsuarioBloc>(context).add(CleanUsuario());
+              })
+        ],
       ),
       drawer: Drawer(
         child: Column(
@@ -18,10 +28,19 @@ class Page1Screen extends StatelessWidget {
           ],
         ),
       ),
-      body: InformacionUsuario(),
+      body: BlocBuilder<UsuarioBloc, UsuarioState>(
+        builder: (context, state) {
+          if (state is UsuarioState) {
+            if (state.existeUsuario) {
+              return InformacionUsuario(state.usuario);
+            }
+          }
+          return Center(child: CircularProgressIndicator());
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.next_plan_outlined),
-        onPressed: (){
+        onPressed: () {
           Navigator.pushNamed(context, 'pagina2');
         },
       ),
@@ -30,6 +49,10 @@ class Page1Screen extends StatelessWidget {
 }
 
 class InformacionUsuario extends StatelessWidget {
+  final Usuario usuario;
+
+  InformacionUsuario(this.usuario);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,28 +63,32 @@ class InformacionUsuario extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('General', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+            Text(
+              'General',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Divider(),
             ListTile(
-              title: Text('nombre:'),
+              title: Text('nombre: ${this.usuario.nombre}'),
             ),
             ListTile(
-              title: Text('nombre:'),
+              title: Text('Edad: ${this.usuario.edad}'),
             ),
-
-            Text('Profesiones', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
+            Text(
+              'Profesiones',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Divider(),
-
-            ListTile(
-              title: Text('Profesión 1:'),
-            ),
-            ListTile(
-              title: Text('Profesión 2'),
-            ),
+            ...this
+                .usuario
+                .profesiones
+                .map((profesion) => ListTile(
+                      title: Text(profesion),
+                    ))
+                .toList(),
           ],
         ),
       ),
     );
   }
 }
-
